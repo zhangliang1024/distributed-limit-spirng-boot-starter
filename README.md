@@ -51,3 +51,35 @@ public class LimitController {
     }
 }
 ```
+
+### 三、支持扩展限流类型
+> 实现限流类型接口和具体的执行接口
+```java
+/**
+ * 限流类型接口
+ */
+@Service
+public interface LimitTypeService {
+    String getType();
+}
+
+/**
+ * 限流执行接口
+ */
+public interface LimitHandler {
+
+    boolean tryAcquire(String key, long limitCount, String description, long expire, TimeUnit timeUnit);
+}
+
+```
+
+> 通过注入自定义实现，代替默认实现
+```java
+@Bean
+public LimitHandler limitHandler(LimitTypeService limitTypeService){
+}
+
+@Bean
+public LimitTypeService limitTypeService(){
+}
+```

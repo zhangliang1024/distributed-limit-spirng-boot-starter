@@ -8,6 +8,8 @@ import com.zhliang.pzy.distributed.limit.handler.LocalLimitHandler;
 import com.zhliang.pzy.distributed.limit.handler.RedisLimitHandler;
 import com.zhliang.pzy.distributed.limit.type.LimitType;
 import com.zhliang.pzy.distributed.limit.type.LimitTypeService;
+import com.zhliang.pzy.distributed.limit.type.LocalLimitType;
+import com.zhliang.pzy.distributed.limit.type.RedisLimitType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -20,7 +22,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
 import java.io.Serializable;
 
 @ConditionalOnClass(RedisAutoConfiguration.class)
@@ -39,7 +40,7 @@ public class RedisLimitAutoConfiguration {
     }
 
     @Bean("redisLimitTemplate")
-    @ConditionalOnProperty(prefix = "pzy.redis.limit.type", name = "redis", havingValue = "true")
+    @ConditionalOnProperty(prefix = "pzy.redis.limit", name = "type", havingValue = "redis")
     public RedisTemplate<String, Serializable> redisLimitTemplate(LettuceConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, Serializable> redisLimitTemplate = new RedisTemplate<>();
         redisLimitTemplate.setKeySerializer(new StringRedisSerializer());
@@ -50,12 +51,25 @@ public class RedisLimitAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public LimitHandler limitHandler(){
-        if(LimitType.REDIS.getName().equals(prop.getType())){
+    public LimitHandler limitHandler(LimitTypeService limitTypeService){
+        if(LimitType.REDIS.getName().equals(limitTypeService.getType())){
             return  new RedisLimitHandler();
-        }else if(LimitType.LOCAL.getName().equals(prop.getType())){
+        }else if(LimitType.LOCAL.getName().equals(limitTypeService.getType())){
             return  new LocalLimitHandler();
         }
         return  new LocalLimitHandler();
     }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public LimitTypeService limitTypeService(){
+        String type = prop.getType();
+        if(LimitType.REDIS.getName().equals(type)){
+            return  new RedisLimitType(type);
+        }else if(LimitType.LOCAL.getName().equals(type)){
+            return  new LocalLimitType(type);
+        }
+        return  new LocalLimitType(type);
+    }
+
 }

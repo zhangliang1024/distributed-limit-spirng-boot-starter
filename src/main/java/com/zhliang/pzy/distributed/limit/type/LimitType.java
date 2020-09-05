@@ -3,7 +3,7 @@ package com.zhliang.pzy.distributed.limit.type;
 /**
  * 支持类型枚举
  */
-public enum LimitType implements LimitTypeService{
+public enum LimitType {
 
     LOCAL("local"),
     REDIS("redis")
@@ -14,7 +14,6 @@ public enum LimitType implements LimitTypeService{
         this.name = name;
     }
 
-    @Override
     public String getName() {
         return name;
     }
